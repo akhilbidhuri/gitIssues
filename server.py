@@ -4,10 +4,27 @@ from datetime import datetime, timedelta
 from flask_cors import CORS, cross_origin
 from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
+from bs4 import BeautifulSoup 
+
+
 base_url = "https://api.github.com/repos/" #Base URL for accessing git APIs corresponding to repository based calls
 
 app = Flask(__name__, static_folder='build/static', template_folder="build")
 cors = CORS(app, resources=r'/*')
+
+def getDetails(url):
+    '''
+    This method scrapes the required details of the repo from the web using beautiful soup.
+    '''
+    r = requests.get(url)
+    soup = BeautifulSoup(r.content, 'html5lib')
+    no_of_issues = int(soup.find('a', attrs={'href':'/moby/moby/issues'}).find('span', attrs={'class':'Counter'}).text.replace(',', ''))
+    subscribers_count = int(soup.find('a', attrs={'href':'/moby/moby/watchers'}).text.replace(',', ''))
+    stargazers_count = int(soup.find('a', attrs={'href':'/moby/moby/stargazers'}).text.replace(',', ''))
+    forks = int(soup.find('a', attrs={'href':'/moby/moby/network/members'}).text.replace(',', ''))
+    description = soup.find('span', attrs={'itemprop':'about'}).text.strip()
+    language = soup.find('span', attrs={'class':'language-color'}).text
+    return {'no_of_issues': no_of_issues, "subscribers_count": subscribers_count, "stargazers_count": stargazers_count, "forks": forks, "description": description, "language": language}
 
 # Serve React App
 @app.route("/")
@@ -33,14 +50,15 @@ def getIssues():
     url_client_details = 'client_id=Iv1.298435e1cf166cec&client_secret=b06060714d845d6ae1449d0273ebb911192ffcf0'
     details = None
     try:
-        details = json.loads(requests.get(repo_detail_url+'?'+url_client_details).text)
+        #details = json.loads(requests.get(repo_detail_url+'?'+url_client_details).text)
+        details = getDetails(repo_url)
     except:
         print('Wrong request was made Logging!')
         return jsonify({'msg': 'Failed Wrong URL sent!!!'})
     
-    if details.get('message', 0) !=0:
-        return jsonify({'msg': 'API calls exceeded the limit !!!'})
-    total_issues = details['open_issues']#number of open isuues
+    # if details.get('message', 0) !=0:
+    #     return jsonify({'msg': 'API calls exceeded the limit !!!'})
+    total_issues = details['no_of_issues']#number of open isuues
     desc = details['description']#description of the repo
     stars = details['stargazers_count']#number of stars
     watchers = details['subscribers_count']#number of watchers
