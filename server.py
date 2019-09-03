@@ -18,10 +18,14 @@ def getDetails(url, username, repo_name):
     '''
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html5lib')
-    no_of_issues = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/issues'}).find('span', attrs={'class':'Counter'}).text.replace(',', ''))
-    subscribers_count = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/watchers'}).text.replace(',', ''))
-    stargazers_count = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/stargazers'}).text.replace(',', ''))
-    forks = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/network/members'}).text.replace(',', ''))
+    no_of_issues = soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/issues'}).find('span', attrs={'class':'Counter'}).text.replace(',', '')
+    no_of_issues = int(''.join(filter(lambda x: x.isdigit(), no_of_issues)))
+    subscribers_count = soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/watchers'}).text.replace(',', '')
+    subscribers_count = int(''.join(filter(lambda x: x.isdigit(), subscribers_count)))
+    stargazers_count = soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/stargazers'}).text.replace(',', '')
+    stargazers_count = int(''.join(filter(lambda x: x.isdigit(), stargazers_count)))
+    forks = soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/network/members'}).text.replace(',', '')
+    forks = int(''.join(filter(lambda x: x.isdigit(), forks)))
     description = soup.find('span', attrs={'itemprop':'about'}).text.strip()
     language = soup.find('span', attrs={'class':'language-color'}).text
     return {'no_of_issues': no_of_issues, "subscribers_count": subscribers_count, "stargazers_count": stargazers_count, "forks": forks, "description": description, "language": language}
