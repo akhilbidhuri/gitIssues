@@ -12,16 +12,16 @@ base_url = "https://api.github.com/repos/" #Base URL for accessing git APIs corr
 app = Flask(__name__, static_folder='build/static', template_folder="build")
 cors = CORS(app, resources=r'/*')
 
-def getDetails(url):
+def getDetails(url, username, repo_name):
     '''
     This method scrapes the required details of the repo from the web using beautiful soup.
     '''
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html5lib')
-    no_of_issues = int(soup.find('a', attrs={'href':'/moby/moby/issues'}).find('span', attrs={'class':'Counter'}).text.replace(',', ''))
-    subscribers_count = int(soup.find('a', attrs={'href':'/moby/moby/watchers'}).text.replace(',', ''))
-    stargazers_count = int(soup.find('a', attrs={'href':'/moby/moby/stargazers'}).text.replace(',', ''))
-    forks = int(soup.find('a', attrs={'href':'/moby/moby/network/members'}).text.replace(',', ''))
+    no_of_issues = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/issues'}).find('span', attrs={'class':'Counter'}).text.replace(',', ''))
+    subscribers_count = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/watchers'}).text.replace(',', ''))
+    stargazers_count = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/stargazers'}).text.replace(',', ''))
+    forks = int(soup.find('a', attrs={'href':'/'+ username +'/'+ repo_name +'/network/members'}).text.replace(',', ''))
     description = soup.find('span', attrs={'itemprop':'about'}).text.strip()
     language = soup.find('span', attrs={'class':'language-color'}).text
     return {'no_of_issues': no_of_issues, "subscribers_count": subscribers_count, "stargazers_count": stargazers_count, "forks": forks, "description": description, "language": language}
@@ -51,7 +51,7 @@ def getIssues():
     details = None
     try:
         #details = json.loads(requests.get(repo_detail_url+'?'+url_client_details).text)
-        details = getDetails(repo_url)
+        details = getDetails(repo_url, username, repo_name)
     except:
         print('Wrong request was made Logging!')
         return jsonify({'msg': 'Failed Wrong URL sent!!!'})
